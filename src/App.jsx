@@ -16,7 +16,7 @@ import User from "./pages/User";
 // }
 
 function App() {
-  return(
+  return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
@@ -25,7 +25,7 @@ function App() {
         <Route path="/user" element={<User />} />
       </Routes>
     </BrowserRouter>
-  )
-};
+  );
+}
 
 export default App;
