@@ -6,9 +6,11 @@ import {
   Row,
   Col,
   Alert,
+  FormControl,
 } from "react-bootstrap";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../services/api";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -25,34 +27,42 @@ const Login = () => {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:8000/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ email, password }),
+      const response = await api.post(`/login`, {
+        email,
+        password,
       });
+      // if (!response.ok) {
+      //   if (response.status === 422 && response.error) {
+      //     const firstKey = Object.keys(response.error)[0];
+      //     setError(response.error[firstKey][0]);
+      //   } else {
+      //     setError(response.message || "Email dan password salah!");
+      //   }
+      //   return;
+      // }
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 422 && data.error) {
-          const firstKey = Object.keys(data.error)[0];
-          setError(data.error[firstKey][0]);
-        } else {
-          setError(data.message || "Email dan password salah!");
-        }
-
-        return;
-      }
-
-      localStorage.setItem("token", data.token);
-
+      localStorage.setItem("token", response.token);
       navigate("/dashboard");
     } catch (error) {
-      console.error(error);
-      setError("Server error");
+      console.error(error.response);
+      if (error.response) {
+        if (error.response.status === 422 && error.response.data.error) {
+          const rawErrors = error.response.data.error;
+          const formatError = {};
+          Object.keys(rawErrors).forEach((key) => {
+            formatError[key] = rawErrors[key][0];
+          });
+          setError(formatError);
+        } else if (error.response.status === 401) {
+          setError(
+            error.response.data.message ||
+              "Please check your email and password!",
+          );
+        } else {
+          //500
+          setError("Server Error");
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -66,7 +76,7 @@ const Login = () => {
             <Card.Body className="p-4">
               <h3 className="text-center mb-4 font-weight-bold">Login Form</h3>
 
-              {error && <Alert variant="danger">{error}</Alert>}
+              {/* {error && <Alert variant="danger">{error}</Alert>} */}
 
               <Form onSubmit={handleLogin}>
                 <Form.Group className="mb-3">
@@ -76,7 +86,11 @@ const Login = () => {
                     placeholder="email@gmail.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                  />
+                    isInvalid={!!error?.email}
+                  ></Form.Control>
+                  <FormControl.Feedback type="invalid">
+                    {error?.email}
+                  </FormControl.Feedback>
                 </Form.Group>
 
                 <Form.Group className="mb-3">
@@ -86,7 +100,11 @@ const Login = () => {
                     placeholder="Enter Your Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                  />
+                    isInvalid={!!error?.password}
+                  ></Form.Control>
+                  <FormControl.Feedback type="invalid">
+                    {error?.password}
+                  </FormControl.Feedback>
                 </Form.Group>
 
                 <Button
