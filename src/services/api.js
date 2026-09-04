@@ -25,7 +25,7 @@ api.interceptors.response.use(
   (response) => {
     // Any status code within the range of 2xx triggers this function
     // Example: Simplify data extraction by returning only response.data
-    return response;
+    return response.data;
   },
   (error) => {
     // Any status codes outside the range of 2xx trigger this function

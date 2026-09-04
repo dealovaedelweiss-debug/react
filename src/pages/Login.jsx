@@ -40,7 +40,6 @@ const Login = () => {
       //   }
       //   return;
       // }
-
       localStorage.setItem("token", response.token);
       navigate("/dashboard");
     } catch (error) {
